@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1611148882997.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C90FA804",
+    "lastKnownWriteTime" : 1611155096,
+    "last_content_update" : 1611156189532,
+    "path" : "~/Documents/SentimentAnalysis/Idea.R",
+    "project_path" : "Idea.R",
+    "properties" : {
+        "cursorPosition" : "83,0",
+        "scrollLine" : "69",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
