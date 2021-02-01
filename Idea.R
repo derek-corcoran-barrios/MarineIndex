@@ -1,73 +1,151 @@
 ## Cargo los paquetes necesarios
-
-library(tidytext)
-library(tidyverse)
-library(rvest)
-library(tm)
-
-# Obtengo los nombres de las ciudades desde wikipedia
-
-Chile2 <- read_html("https://es.wikipedia.org/wiki/Anexo:Ciudades_de_Chile") %>% 
-  rvest::html_nodes("td:nth-child(2) a") %>% 
-  html_attr('title')
-
-# Obtengo los links de esas ciudades desde wikipedia
-
-Chileref2 <- read_html("https://es.wikipedia.org/wiki/Anexo:Ciudades_de_Chile") %>% 
-  rvest::html_nodes("td:nth-child(2) a") %>% 
-  html_attr('href')
-
-# Genero el dataframe con los links
-Chile_DF <- tibble(Ciudad = Chile2, link = paste0("https://es.wikipedia.org", Chileref2)) %>% 
-  distinct()
-
-# Empiezo un objeto text para llenarlo con el contenido de wikipedia
-
-Texts <- list()
-
-## Uso las stopwords de tm en español para luego quitarlas del corpus
-
-stopwords <-tibble(word = tm::stopwords("spanish"),
-                   lexicon = "custom")
-
-# Para mas detalles en textmining ver el siguiente link
-##https://www.tidytextmining.com/##
-
-for(i in 1:nrow(Chile_DF)){
-  # para cada fila (Ciudad)
-  ## Leo el html
-  Temp <- read_html(Chile_DF$link[i]) %>%
-    # Extraigo los parrafos (Sin titulos)
-    html_nodes("p") %>% 
-    # lo tranformo en texto
-    html_text()
   
-  ## Para esa ciudad genero un dataframe conlos parrafos y el nombre de ciudad
-  Texts[[i]] <- tibble(Paragraph = Temp, City = Chile_DF$Ciudad[i]) %>%
-    # Saco numeros y simbolos
-    mutate(Paragraph = gsub(x = Paragraph, pattern = "[0-9]+|[[:punct:]]|\\(.*\\)", replacement = "")) %>% 
-    ## Hago una fila por palabra
-    unnest_tokens(word, Paragraph) %>% 
-    ## QUito los stopwords
-    anti_join(stopwords)  %>%
-    ## Agrupo por palabra y ciudad
-    group_by(word, City) %>% 
-    ## Obtengo el numero de veces que aparece cada palabra y lo ordeno
-    summarise(n = n()) %>% 
-    # Lo pongo en orden descendiente
-    arrange(desc(n)) %>% 
-    # Desagrupo
-    ungroup %>%
-    ## Calculo la frecuencia de cada palabra
-    mutate(Total = sum(n), Freq = n/Total)
-   message(paste("Ciudad", Chile_DF$Ciudad[i], "lista,", i, "de", nrow(Chile_DF)))
-}  
-
-## Uno todas las ciudades
-Texts <- Texts %>% reduce(bind_rows)
+  library(tidytext)
+  library(tidyverse)
+  library(rvest)
+  library(tm)
   
-saveRDS(Texts, "Texts.rds")
+  # Obtengo los nombres de las ciudades desde wikipedia
+  
+  Chile2 <- read_html("https://es.wikipedia.org/wiki/Anexo:Ciudades_de_Chile") %>% 
+    rvest::html_nodes("td:nth-child(2) a") %>% 
+    html_attr('title')
+  
+  # Obtengo los links de esas ciudades desde wikipedia
+  
+  Chileref2 <- read_html("https://es.wikipedia.org/wiki/Anexo:Ciudades_de_Chile") %>% 
+    rvest::html_nodes("td:nth-child(2) a") %>% 
+    html_attr('href')
+  
+  # Genero el dataframe con los links
+  Chile_DF <- tibble(Ciudad = Chile2, link = paste0("https://es.wikipedia.org", Chileref2)) %>% 
+    distinct() %>% 
+    mutate(Ciudad = str_remove_all(Ciudad," de Chile"), Ciudad = str_remove_all(Ciudad," \\(Chile\\)"), Ciudad = str_remove_all(Ciudad," \\(Temuco\\)"), Ciudad = str_remove_all(Ciudad," \\(ciudad\\)"), Ciudad = str_remove_all(Ciudad," \\(aún no redactado\\)"), Ciudad = str_remove_all(Ciudad," \\(localidad\\)"), Ciudad = str_remove_all(Ciudad," \\(comuna\\)"), Ciudad = str_remove_all(Ciudad," \\(Los Andes\\)"), Ciudad = str_remove_all(Ciudad," \\(Lampa\\)"))
+  
+  # Empiezo un objeto text para llenarlo con el contenido de wikipedia
+  
+  Texts <- list()
+  
+  ## Uso las stopwords de tm en español para luego quitarlas del corpus
+  
+  stopwords <-tibble(word = tm::stopwords("spanish"),
+                     lexicon = "custom")
+  
+  Nuestras_Stop <- tibble(word = c("habitantes", "población", "ciudad", "comuna", "localidad", "atacama", "censo", 
+                                   "chile", 
+                                   "paipote", "pueblo", "región", "según", "área", 
+                                   "perteneciente","huatulame", "parte", 
+                                   "capital", "tres", "cuenta",  
+                                   "til", "san", "cuales", 
+                                   "hombres", "kilómetros", "mujeres", "poblado", 
+                                   "sitio", "total", "ubicada", "avenida", "comunas", "metropolitana", 
+                                   "zona","españoles", "gran", 
+                                   "biobío", "transporte", "francisco", 
+                                   "junto", "mostazal", "central", "lugar", 
+                                   "chiloé", "provincia", "ñuble", "regional", "título", "aysén", 
+                                   "placilla", "calero", "división","flexquoteflexdisplayflexflexdirectionrowmwparseroutput	", 
+                                  "nombre", "ˈkɑːkrən" , "flexquotedisplayflexflexdirectioncolumnbackgroundcolorfffborderleftpx",
+                                   "calleuque","don", "palena", "colchagua", "ª", 
+                                   "alcalde", "araucanía", "cantidad", "cautín", "circunscripción", 
+                                   "complejidad"), lexicon = "Nuestro")
+  
+  stopwords <- bind_rows(stopwords, Nuestras_Stop)
+  
+  # Para mas detalles en textmining ver el siguiente link
+  ##https://www.tidytextmining.com/##
+  
+  Para_Sacar <- str_c(Chile_DF$Ciudad, collapse = "|")
+  
+  for(i in 1:nrow(Chile_DF)){
+    # para cada fila (Ciudad)
+    ## Leo el html
+    Temp <- read_html(Chile_DF$link[i]) %>%
+      # Extraigo los parrafos (Sin titulos)
+      html_nodes("p") %>% 
+      # lo tranformo en texto
+      html_text() %>% 
+      str_remove_all(Para_Sacar)
+    
+    ## Para esa ciudad genero un dataframe conlos parrafos y el nombre de ciudad
+    Texts[[i]] <- tibble(Paragraph = Temp, City = Chile_DF$Ciudad[i]) %>%
+      # Saco numeros y simbolos
+      mutate(Paragraph = gsub(x = Paragraph, pattern = "[0-9]+|[[:punct:]]|\\(.*\\)", replacement = "")) %>% 
+      ## Hago una fila por palabra
+      unnest_tokens(word, Paragraph) %>% 
+      ## QUito los stopwords
+      anti_join(stopwords)  %>%
+      ## Agrupo por palabra y ciudad
+      group_by(word, City) %>% 
+      ## Obtengo el numero de veces que aparece cada palabra y lo ordeno
+      summarise(n = n()) %>% 
+      # Lo pongo en orden descendiente
+      arrange(desc(n)) %>% 
+      # Desagrupo
+      ungroup %>%
+      ## Calculo la frecuencia de cada palabra
+      mutate(Total = sum(n), Freq = n/Total)
+     message(paste("Ciudad", Chile_DF$Ciudad[i], "lista,", i, "de", nrow(Chile_DF)))
+  }  
+  
+  ## Uno todas las ciudades
+  Texts <- Texts %>% reduce(bind_rows)
+    
+  saveRDS(Texts, "Texts.rds")
+  
+  ## Filtramos localidades que tienen al menos 500 palabras
+  
+  Texts <- read_rds("Texts.rds") %>% 
+    dplyr::filter(Total >= 500)
+  
+  Palabras_Unicas <- tibble(word = unique(Texts$word), Conexion_Marina = NA) %>% 
+    mutate(Conexion_Marina = case_when(str_detect(word,"pesc") ~ 1,
+                                       str_detect(word, "^marin") ~ 1,
+                                       str_detect(word, "surf") ~ 1,
+                                       word == "marinadas" ~ 0,
+                                       word == "oceanográfico" ~ 1,
+                                       word == "mar" ~ 1,
+                                       str_detect(word, "^play") ~ 1,
+                                       str_detect(word, "^puerto") ~ 1,
+                                       word == "ciudadpuerto" ~ 1,
+                                       word == "bordemar" ~ 1,
+                                       str_detect(word, "^isla") ~ 1,
+                                       str_detect(word,"naveg") ~ 1,
+                                       word == "nadar" ~ 1,
+                                       str_detect(word, "^naval") ~ 1,
+                                       str_detect(word,"aeronaval") ~ 1,
+                                       str_detect(word,"mareal") ~ 1,
+                                       str_detect(word,"marisc") ~ 1,
+                                       str_detect(word,"embarca") ~ 1,
+                                       str_detect(word, "^barca") ~ 1,
+                                       str_detect(word,"barco") ~ 1,
+                                       str_detect(word,"caleta") ~ 1,
+                                       str_detect(word,"balneario") ~ 1,
+                                       str_detect(word,"roquerío") ~ 1,
+                                       str_detect(word,"marejada") ~ 1,
+                                       str_detect(word,"tsunami") ~ 1,
+                                       word == "maremoto" ~ 1,
+                                       word == "pez" ~ 1,
+                                       word == "peces" ~ 1,
+                                       str_detect(word,"ballen") ~ 1,
+                                       str_detect(word,"ballenar") ~ 0,
+                                       str_detect(word,"portua") ~ 1,
+                                       str_detect(word,"oleaje") ~ 1,
+                                       word == "faro" ~ 1,
+                                       word == "faros" ~ 1,
+                                       str_detect(word, "^duna") ~ 1,
+                                       word == "dunalastair" ~ 0,
+                                       word == "farellón" ~ 1
+                                       #TRUE ~ 0
+                                       ))
 
+###################
+  
+  
+  
+  
+  
+  
+####################
 ## Ejemplo idea grafico de suma de frecuencias de palabras que empiezan con Pesc
 
 Pesc <- Texts %>% 
