@@ -1,32 +1,32 @@
-sp.,type
-Laridae,marina
-Phaethontidae,marina
-Sulidae,marina
-Phalacrocoracidae,marina
-Pelecanidae,marina
-Frigatidae,marina
-Spheniscidae,marina
-Procellariidae,marina
-Anatidae,acuatica
-Podicipedidae,acuatica
-Phoenicopteridae,acuatica
-Diomedeidae,marina
-Oceanitidae,marina
-Hydrobatidae,marina
-Procellariidae,marina
-Phaethontidae,marina
-Ciconiidae,acuatica
-Ardeidae,acuatica
-Threskiornithidae,acuatica
-Pandionidae,acuatica
-Rallidae,acuatica
-Burhindae,playero
-Charadriidae,playero
-Chionidae,playero
-Haematopodidae,playero
-Jacanidae,acuatica
-Stercorariidae,marina
-Rynchopidae,playero
-Pluvianellidae,playero
-Recursvirostridae,playero
-Scolopacidae,playero
+sp,Type_aquatic ,Type_bird
+Laridae,seabird,Aquatic
+Phaethontidae,seabird,Aquatic
+Sulidae,seabird,Aquatic
+Phalacrocoracidae,seabird,Aquatic
+Pelecanidae,seabird,Aquatic
+Frigatidae,seabird,Aquatic
+Spheniscidae,seabird,Aquatic
+Procellariidae,seabird,Aquatic
+Anatidae,shallow water bird,Aquatic
+Podicipedidae,shallow water bird,Aquatic
+Phoenicopteridae,shallow water bird,Aquatic
+Diomedeidae,seabird,Aquatic
+Oceanitidae,seabird,Aquatic
+Hydrobatidae,seabird,Aquatic
+Procellariidae,seabird,Aquatic
+Phaethontidae,seabird,Aquatic
+Ciconiidae,shallow water bird,Aquatic
+Ardeidae,shallow water bird,Aquatic
+Threskiornithidae,shallow water bird,Aquatic
+Pandionidae,shallow water bird,Aquatic
+Rallidae,shallow water bird,Aquatic
+Burhindae,shorebird,Aquatic
+Charadriidae,shorebird,Aquatic
+Chionidae,shorebird,Aquatic
+Haematopodidae,shorebird,Aquatic
+Jacanidae,shallow water bird,Aquatic
+Stercorariidae,seabird,Aquatic
+Rynchopidae,shorebird,Aquatic
+Pluvianellidae,shorebird,Aquatic
+Recursvirostridae,shorebird,Aquatic
+Scolopacidae,shorebird,Aquatic
