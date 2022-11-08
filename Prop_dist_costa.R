@@ -1,44 +1,28 @@
 # PROPORCION CON DISTANCIA A LA COSTA de cada poligono de las ciudades trabajadas
 # considerando distintas distancias a la costa
 
-
-
-# Poligonos ciudades
-
 library(sf)
 library(tidyverse)
 library(terra)
 library(geodata)
 
 
-Coords <- read_rds("/home/giorgia/Documents/Doctorado tesis/Mod.distrib/ModelacionAsentamientosGit/CoordsCiudades.rds") %>% 
-  dplyr::filter(!is.na(Lon)) %>% 
-  st_as_sf(coords = c("Lon", "Lat"), crs ='+proj=longlat +datum=WGS84') %>% 
-  dplyr::mutate(Ciudad = stringr::str_to_lower(Ciudad)) %>% 
-  as.data.frame() %>% 
-  dplyr::select(-geometry)
+####
+#Poligonos de las ciudades que poseen un indice marino
+Coords2 <- read_rds("Poligonos_Ciudades.rds")
 
 
-Urban <- read_sf("/home/giorgia/Documents/Doctorado tesis/Mod.distrib/ModelacionAsentamientosGit/Areas_Pobladas.shp")%>% 
-  st_make_valid() %>% 
-  st_transform('+proj=longlat +datum=WGS84') %>% 
-  rename(Ciudad = Localidad) %>% 
-  dplyr::mutate(Ciudad = stringr::str_to_lower(Ciudad))
+#sacamos Puente alto por interferencia
+#Geometry type: GEOMETRYCOLLECTION
+Coords2 <- dplyr::filter(Coords2, Ciudad != "puente alto")
+#lo puedo sumar al final con proporcion 0
 
-
-Coords2 <- Urban %>% 
-  merge(Coords)
-
-rm(Urban)
-rm(Coords)
-gc()
-
+####
 # Loop para sacar info de todos los poligonos de las ciudades
 Coords2$Proporcion_Costera_1800 <- NA
 Coords2$Proporcion_Costera_1000 <- NA
 Coords2$Proporcion_Costera_600 <- NA
 
-Coords2 <- dplyr::filter(Coords2, Ciudad != "puente alto")
 
 for(i in 1:nrow(Coords2)){
   message(paste("Starting with", Coords2[i,]$Ciudad))
@@ -88,9 +72,16 @@ for(i in 1:nrow(Coords2)){
 }
 
 #para mirar los datos
-#SoloCosta <- Coords2 %>% dplyr::filter(Proporcion_Costera > 0)
+#SoloCosta <- Coords2 %>% dplyr::filter(Proporcion_Costera_1800 > 0)
 
 Prop_Polig <- Coords2 %>%
   as.data.frame() %>% 
   dplyr::select(Ciudad, Proporcion_Costera_1800, Proporcion_Costera_1000, Proporcion_Costera_600)
+
+#agrego puente alto
+library(readxl)
+puente_alto <- read_excel("puente_alto.xls")
+  
+Prop_Polig <- Prop_Polig %>% bind_rows(puente_alto)
+
 saveRDS(Prop_Polig, "Prop_Polig.rds")

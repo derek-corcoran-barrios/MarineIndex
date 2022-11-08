@@ -7,47 +7,11 @@ library(sf)
 library(rinat)
 library(terra)
 
-
-Coords <- read_rds("/home/giorgia/Documents/Doctorado tesis/Mod.distrib/ModelacionAsentamientosGit/CoordsCiudades.rds") %>% 
-  dplyr::filter(!is.na(Lon)) %>% 
-  st_as_sf(coords = c("Lon", "Lat"), crs ='+proj=longlat +datum=WGS84') %>% 
-  dplyr::mutate(Ciudad = stringr::str_to_lower(Ciudad)) %>% 
-  as.data.frame() %>% 
-  dplyr::select(-geometry)
+#Poligonos de las ciudades que poseen un indice marino
+Coords2 <- readRDS("Poligonos_Ciudades.rds")
 
 
-
-Urban <- read_sf("/home/giorgia/Documents/Doctorado tesis/Mod.distrib/ModelacionAsentamientosGit/Areas_Pobladas.shp")%>% 
-  st_make_valid() %>% 
-  st_transform('+proj=longlat +datum=WGS84') %>% 
-  rename(Ciudad = Localidad) %>% 
-  dplyr::mutate(Ciudad = stringr::str_to_lower(Ciudad))
-
-
-Coords2 <- Urban %>% 
-  merge(Coords)
-
-## Corregir Iquique
-
-Iquique <- dplyr::filter(Coords2, Ciudad == "iquique") %>% 
-  tibble::rowid_to_column() %>% 
-  dplyr::filter(rowid == 12) %>% 
-  dplyr::select(-rowid)
-
-Coords2 <- dplyr::filter(Coords2, Ciudad != "iquique") %>% 
-  dplyr::bind_rows(Iquique)
-
-rm(Urban)
-rm(Coords)
-gc()
-#######################################
-# Ahora para cada ciudad obtendremos la altura
-
-
-
-Coords2 <- Coords2[-c(218,219),]
-
-
+### Descarga de especies a partir de poligonos
 
 Temp <- list()
 
@@ -87,7 +51,8 @@ for(i in 1:length(Temp)){
 Temp <- Temp[cond]
 
 Aves <- Temp %>% 
-  purrr::map(~dplyr::mutate(.x, description = as.character(description),
+  purrr::map(~dplyr::mutate(.x, 
+                            description = as.character(description),
                             tag_list = as.character(tag_list),
                             species_guess = as.character(species_guess),
                             geoprivacy = as.character(geoprivacy),
@@ -98,6 +63,7 @@ Aves <- Temp %>%
                             license = as.character(license),
                             scientific_name = as.character(scientific_name),
                             common_name = as.character(common_name),
+                            user_name=as.character(user_name),
                             image_url = as.character(image_url),
                             iconic_taxon_name = as.character(iconic_taxon_name),
                             time_observed_at = as.character(time_observed_at))) %>% 
@@ -125,6 +91,10 @@ Aves <- Aves %>% dplyr::filter(iconic_taxon_name %in% c("Aves","Animalia"))
 
 saveRDS(Aves, "Diversidad_aves.rds")
 
+
+####################################################################
+### Ahora arreglo de aves por grupos
+
 Aves <- readRDS("Diversidad_aves.rds")
 
 library(taxize)
@@ -133,7 +103,7 @@ library(taxize)
 ## Especies unicas
 Especies <- unique(Aves$scientific_name) %>% sort()
 
-## Resolver taxonomia usando el backbone the GBIF con tazize
+## Resolver taxonomia usando el backbone the GBIF con taxize
 
 Fixed <- taxize::gnr_resolve(sci = Especies, data_source_ids = 11, canonical = T, best_match_only = T, fields = "all")
 
@@ -148,23 +118,25 @@ Fixed_Corrected <- Fixed %>% dplyr::filter(str_detect(classification_path, "Aves
 Aves_Corregida <- Aves %>% 
   right_join(Fixed_Corrected)
 
-
+# Abundancia de aves por ciudad
 Aves_Abundancia <- Aves_Corregida %>%
   as.data.frame() %>% 
   group_by(scientific_name, Ciudad, comuna, family) %>% 
   dplyr::summarise(n = n())
 
+
+#todas las familias presentes en la base de datos
 Familias <- Aves_Abundancia %>% 
   ungroup() %>% 
   dplyr::select(family) %>% 
   distinct() %>% 
   arrange(family)
 
-#write_csv(Familias, "Familias_Para_Clasificar.csv")
-Familias <- readr::read_csv("Familias_Para_Clasificar.csv") %>% 
+#write_csv(Familias, "Familias_Para_Clasificar.csv") FAMILIAS POR AMBIENTE Y HABITAT
+Familias_ <- readr::read_csv("Familias_Para_Clasificar.csv") %>% 
   rename(family = Family)
 
-Aves_Abundancia <- Aves_Abundancia %>% left_join(Familias)
+Aves_Abundancia <- Aves_Abundancia %>% left_join(Familias_)
 
 Riqueza_Por_Environment <- Aves_Abundancia %>% 
   group_by(Ciudad, Environment) %>% 

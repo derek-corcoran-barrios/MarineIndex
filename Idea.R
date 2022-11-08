@@ -249,12 +249,21 @@ values(SA) <- ifelse(is.na(values(SA)), 1, NA)
 
 SA <- distance(SA)
 
-saveRDS(SA, "DistCosta_SA.rds")
+saveRDS(SA, "/home/giorgia/Documents/Doctorado tesis/Mod.distrib/ModelacionAsentamientosGit/DistCosta_SA.rds")
 
 ##########
 # Extraccion de valores para las ciudades de chile
 
-Coords <- read_rds("/home/giorgia/Documents/Doctorado tesis/Mod.distrib/ModelacionAsentamientosGit/CoordsCiudades.rds") %>% dplyr::filter(!is.na(Lon))
+Coords <- read_rds("/home/giorgia/Documents/Doctorado tesis/Mod.distrib/ModelacionAsentamientosGit/CoordsCiudades.rds")  
+  Coords$Lon[4] <- -71.269567  #Conurbacion la serena-coquimbo
+  Coords$Lat[4] <- -29.915144  #Conurbacion la serena-coquimbo
+  Coords$Lon[12]<- -72.103111  #Conurbacion chillan
+  Coords$Lat[12]<- -36.612489  #Conurbacion chillan
+  Coords$Ciudad[1]<- "Gran Santiago" #cambio de nombre
+  
+ Coords <- Coords %>% dplyr::filter(!is.na(Lon))
+ 
+
 DistCosta <- readRDS("/home/giorgia/Documents/Doctorado tesis/Mod.distrib/ModelacionAsentamientosGit/DistCosta_SA.rds")
 Puntos <-SpatialPoints(coords = Coords[c("Lon", "Lat")], proj4string=CRS(as.character("+proj=longlat +datum=WGS84 +no_defs")))
 

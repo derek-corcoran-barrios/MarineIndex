@@ -1,4 +1,4 @@
-﻿City,KmWalk_sea,KmWalk_WB
+City,KmWalk_sea,KmWalk_WB
 Punta Arenas,7.9,
 Antofagasta,21.2,
 Arica,10.1,
@@ -35,12 +35,12 @@ Mejillones,0.4,
 La Serena,4.3,
 Frutillar,0,2.1
 Carahue,0,2.2
-Castro,0, 1.55
+Castro,0,1.55
 Alto Hospicio,0,
 Río Negro,0,
 Penco,1.5,
-Lebu,0, 1.8
-Puerto Varas,0, 3.2
+Lebu,0,1.8
+Puerto Varas,0,3.2
 Valdivia,0,3
 Melipilla,0,
 Casablanca,0,
@@ -49,7 +49,7 @@ Río Bueno,0,1.1
 Chicureo,0,
 El Monte,0,
 Hijuelas,0,
-Villarrica,0, 1.8
+Villarrica,0,1.8
 Pozo Almonte,0,
 Quinta de Tilcoco,0,
 Macul,0,
@@ -63,7 +63,7 @@ Pitrufquén,0,
 Providencia,0,3.2
 Santiago,0,4 /costanera para santaigo centro 
 Santiago,0,16.6 /costanera para el gran santiago
-Pucón,0, 0.55
+Pucón,0,0.55
 San Felipe,0,
 curanilahue,0,
 Ovalle,0,
@@ -80,7 +80,7 @@ Calama,0,
 Hualañe,,
 San Miguel,0,
 Monte Aguila,0,
-osorno,0, 0.75
+osorno,0,0.75
 Villa alemana,0,
 gran Temuco,0,1.8
 La Florida,0,
@@ -97,12 +97,12 @@ Vicuña,0,
 Copiapó,0,
 Vitacura,0,8.8
 Angol,0,
-Nacimiento,0, 0.1
-Traiguen,0, 0.1
+Nacimiento,0,0.1
+Traiguen,0,0.1
 Quinta Normal,0,1
 Puente Alto,0,
 Renca,0,
-padre de las casas,0, 0.3
+padre de las casas,0,0.3
 Pudahuel,0,
 Doñihue,,
 Huechuraba,0,
@@ -111,7 +111,7 @@ Cerro Navia,0,
 talagante,0,
 La Calera,0,
 San fernando,0,
-El quisco,6,0,
+El quisco,6,0
 hualpén,0,
 san carlos,0,
 rengo,0,
@@ -145,4 +145,7 @@ conurbación chillan,0,
 santa maría,0,
 lo barnechea,0,
 putaendo,0,
-
+taltal,1.5,
+purranque,0,
+vallenar,0,
+peñalolen,0,

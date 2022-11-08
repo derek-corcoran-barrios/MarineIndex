@@ -1,19 +1,59 @@
-### Viewshed para ciudades de Chile
 
+### VIEWSHED para ciudades de Chile
 # Uso de capa de altura de ciudades (DEM) y limite costero 
 
 library(sf)
 library(terra)
 library(sfheaders)
-library(GVI)
+library(GVI) #este es el paquete para haccer el Viewshed Greenness Visibility Index (VGVI)
+library(geodata)
+library(tidyverse)
+
+#trabajamos con los poligonos generados para las ciudades de Chile
+
+Poligonos_Ciudades <- readRDS("Poligonos_Ciudades.rds")
+
+Centroides <- readRDS("Poligonos_Ciudades.rds") %>% 
+  st_centroid() %>% 
+  st_coordinates() %>% 
+  as.data.frame() %>% 
+  magrittr::set_colnames(c("lon", "lat"))
 
 ## Hacemos lista de ciudades
 
-Ciudades <- list.files("Alturas_Ciudades/DEM/", full.names = T)
-Names <- list.files("Alturas_Ciudades/DEM/", full.names = F) %>% str_remove_all(".tif")
-### Para leer alturas DEM
+for(i in 1:nrow(Poligonos_Ciudades)){
+  if(st_geometry_type(Poligonos_Ciudades[i,]) == "GEOMETRYCOLLECTION"){
+    Temp <- Poligonos_Ciudades[i,] %>% 
+      st_collection_extract %>% st_union() %>% 
+      terra::vect()
+  } else if(st_geometry_type(Poligonos_Ciudades[i,]) != "GEOMETRYCOLLECTION"){
+    Temp <- Poligonos_Ciudades[i,] %>% 
+      terra::vect()
+    }
+  
+# para cada ciudad determinar el borde del mar y un buffer de 1 km
+  Temp <- Temp %>% 
+    terra::buffer(1000)
+  
+  Alt <- elevation_3s(lon = Centroides$lon[i], lat = Centroides$lat[i], path = getwd()) 
+  
+  Alt[is.na(Alt)] <- -1
+  Alt <- Alt %>%   terra::crop(Temp) %>% 
+   terra::mask(Temp)
+  writeRaster(Alt, paste0("Alturas_Ciudades/DEM/",Poligonos_Ciudades[i,]$Ciudad, ".tif"), overwrite = T)
+  message(paste(i, "of", nrow(Poligonos_Ciudades), "ready!", Sys.time()))
+}
 
+Ciudades <- list.files("Alturas_Ciudades/DEM/", full.names = T)
+Names <- list.files("Alturas_Ciudades/DEM/", full.names = F) %>% stringr::str_remove_all(".tif")
+
+### Para leer alturas DEM
 CRS <- "PROJCRS[\"WGS 84 / UTM zone 19S\",\n    BASEGEOGCRS[\"WGS 84\",\n        ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n            MEMBER[\"World Geodetic System 1984 (Transit)\"],\n            MEMBER[\"World Geodetic System 1984 (G730)\"],\n            MEMBER[\"World Geodetic System 1984 (G873)\"],\n            MEMBER[\"World Geodetic System 1984 (G1150)\"],\n            MEMBER[\"World Geodetic System 1984 (G1674)\"],\n            MEMBER[\"World Geodetic System 1984 (G1762)\"],\n            MEMBER[\"World Geodetic System 1984 (G2139)\"],\n            ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n                LENGTHUNIT[\"metre\",1]],\n            ENSEMBLEACCURACY[2.0]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        ID[\"EPSG\",4326]],\n    CONVERSION[\"UTM zone 19S\",\n        METHOD[\"Transverse Mercator\",\n            ID[\"EPSG\",9807]],\n        PARAMETER[\"Latitude of natural origin\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8801]],\n        PARAMETER[\"Longitude of natural origin\",-69,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"Scale factor at natural origin\",0.9996,\n            SCALEUNIT[\"unity\",1],\n            ID[\"EPSG\",8805]],\n        PARAMETER[\"False easting\",500000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",10000000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1]],\n    USAGE[\n        SCOPE[\"Engineering survey, topographic mapping.\"],\n        AREA[\"Between 72°W and 66°W, southern hemisphere between 80°S and equator, onshore and offshore. Argentina. Bolivia. Brazil. Chile. Colombia. Peru.\"],\n        BBOX[-80,-72,0,-66]],\n    ID[\"EPSG\",32719]]"
+
+
+######
+#Ahora realizamos el analisis de Viewshed: Viewshed Greenness Visibility Index (VGVI)
+#que con el uso de la mascara del mar podemos usarlo para la vista panoramica del mar
 
 VBVI <- list()
 

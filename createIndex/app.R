@@ -14,7 +14,7 @@ library(tidyverse)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
     # Application title
-    titlePanel("Creación de indice marino"),
+    titlePanel("Clasificación de palabras para Indice Marino"),
 
     # Sidebar with a slider input for number of bins 
             textOutput("Word"),

@@ -25,13 +25,23 @@ Validacion_Indice <- Validacion_Indice %>% dplyr::filter(!is.na(Dist_Costa)) %>%
 
 # MarineIndex
 
+```{r}
+#usethis::edit_r_environ() para ver el token
+```
+
+
 
 The goal of MarineIndex is to develop a index of people connections with the sea.
+
+In the introduction of the manuscript there is a plot of fishing landings in Chile, which was created in **Datos pescadores chile.R** with data from SERNAPESCA: *Desembarque_pesca_Chile 2002_2017.xls*
+
 In **Idea.R** we extract information of Wikipedia as peoples's perceptions. With the code we detected all cities from Chile and we made an scraping to extract all the words of each city's text. 
 
 An app was created to input values to all words detected: marine +1, terrestrial -1, and neutral words 0. See **TestApp**.
 
-In **Relaciones indice marino.R** we related marine index with possible explanatory variables. We used *DistCosta_Chile.rds* and *Indice.rds*.
+In **Relaciones indice marino.R** we related marine index with possible explanatory variables. We used *DistCosta_Chile.rds* and *Indice.rds*, both file created in **Idea.R**.
+
+En **Idea.R** se incluyeron datos de las coordenadas de conurbaciones que faltaban para la distancia a la costa y q estaban presentes en el indice marino.
 
 
 
@@ -45,18 +55,40 @@ ggplot(Validacion_Indice) + geom_point(aes(x=Dist_Costa, y=Index)) +  scale_colo
 
 ```
 
-This code is feed by variables created in other scrips:
-
-- **DiversidadAves.R**: bird diversity for each Chilean city with data obtain from iNaturalist. We created *Bird_type_prop.rds*.
-
-- **Viewshed_altitud.R** created a value of coastal visibility from 20% of the cells of each city.
 
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/v1/examples>.
+First we created polygons of cities that we have for marine index. Data was obtain from: 
+
+- https://www.bcn.cl/ for most urban areas of Chile 
+- http://datos.cedeus.cl/ for towns
+- http://datos.cedeus.cl/ for gran santiago
+File is **PoligonosCiudades.R** and data created is in *"Poligonos_Ciudades.rds"*.
+
+
+The variable created are:
+
+- Relation with first settlements was developed in **Prob_grupo_xCiudad.R**. ver README.md in *ModelacionAsentamientosGit* file.
+The data for each city was obtained from *Prob_puntoCiudades_grupos.rds*. We used the centroid of each city polygon (*Poligonos_Ciudades.rds*) to get city's coordinates and obtained the prediction for all ancient groups. Information of calibrated points used ofr models are in *MarineIndex/Supplementary material 1* and file were the distribution model was developed is in **ModelosHUmanosMyT.R**
+
+- Proportion of distance to the coast from each city polygon in **Prop_dist_costa.R** using *Poligonos_Ciudades.rds*, we obtained *Prop_Polig.rds"*
+
+- **Poblacion_Urbana.R** has information about population for every city in Chile obtained from 2017 chilean census. We use *Population2017_forIndex.rds*
+
+- **DiversidadAves.R**: bird diversity for each Chilean city with data obtain from iNaturalist using *Poligonos_Ciudades.rds*. We created *Bird_type_prop.rds*.
+
+- *variables ciudades a mano.csv* was created using google street view and saving in an excel datasheet and correspond to the walkable coastline for each city in Chile.
+
+- **Viewshed_altitud.R** created a value of coastal visibility from 20% of the cells of each city. We use city's polygons, city's altitude from geodata and the function Viewshed Greenness Visibility Index (VGVI) from the GVI package. File */home/giorgia/Documents/Doctorado tesis/Mod.distrib/MarineIndex/Alturas_Ciudades* separated in two files: DEM and DSM need for the VGVI function. Results in *viewshed_altitid.rds*.
+
+- Fisherman activities: data from 2017 census does not work for employment of people because question includes all primary economy activity (fisheries, agricultural and cattle). We use **Encuesta_nac_empleo.R** with data from national survey of employment in Chile 2016. In that survey fisherman's activities were separated from other primary economy activities and it was included the 16 regions of the country with their specific codes for every location (r_c_p). We obtained *Pescadores_ciudad_ENE.rds*
+
+- fisher coves: data from Servicio Nacional de Pesca, with the number of fisher coves registered in Chile. A .kmz was downloaded and transformed in **Datos pescadores chile.R**. *caletas.shp* has the information for fisher coves and coordinates for every region of the country.
 
 
 
 
+Variable were tested GBM in **Relaciones indice marino.R**. Results were saved as *ResultadoGBM2.rds* and *Variables.rds*
 
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub.
+
+
