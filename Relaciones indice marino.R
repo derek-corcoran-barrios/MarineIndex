@@ -58,7 +58,6 @@ Prop_DistCosta <- Prop_DistCosta %>% rename(City = Ciudad)
 Relacion <- left_join(Relacion, Prop_DistCosta)
 
 rm(Prop_DistCosta)
-
 gc()
 
 ###POBLACION URBANA POR CIUDAD ##################################################################
@@ -70,14 +69,12 @@ Pop$City <- janitor::make_clean_names(Pop$City) %>% str_replace_all("_", " ")
 Relacion <- left_join(Relacion, Pop)
 
 rm(Pop)
-
 gc()
 
-###RELACION CON AVES MARINAS ####################################################################
+###RELACION CON DIVERSIDAD DE AVES (MARINAS) ####################################################################
 
 
 Birds <- readRDS("Bird_type_prop.rds")
-
 Birds$Ciudad <- janitor::make_clean_names(Birds$Ciudad) %>% str_replace_all("_", " ")
 
 Birds <- Birds %>% rename(City = Ciudad)
@@ -96,6 +93,15 @@ rm(Birds)
 gc()
 
 
+#### RELACOIN CON DIVERSIDAD DE PLANTAS ##########################
+
+Plantas <- readRDS("RiquezaPlantas_Ciudad.rds") %>% rename(Riq_Plantas= Riqueza_Total)
+
+Relacion <- left_join(Relacion, Plantas)
+rm(Plantas)
+
+gc()
+
 ###RELACION CON COSTANERA CAMINABLE ##############################################################
 
 Walk <- read.csv("variables ciudades a mano.csv")
@@ -107,12 +113,9 @@ Walk$KmWalk_WB <- ifelse(is.na(Walk$KmWalk_WB), 0 , Walk$KmWalk_WB)
 
 Walk$KmWalk_Total<- Walk$KmWalk_sea + Walk$KmWalk_WB
 
-
-
 Relacion <- left_join(Relacion, Walk) 
 
 rm(Walk)
-
 gc()
 
 ### blue visibility index
