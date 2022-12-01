@@ -108,7 +108,7 @@ Urban <- Urban %>% dplyr::filter(Ciudad!= "santiago", Ciudad!= "santiago 2")
 gran_santiago <- read_sf("area_urbana_consolidada_2017Polygon.shp") %>% 
   st_transform(crs="+proj=longlat +datum=WGS84")
 
-#Identifico el poligono del gran santiago y lluego filtro de DF
+#Identifico el poligono del gran santiago y luego filtro de DF
 #leaflet() %>% addTiles() %>% addPolygons(data = gran_santiago, popup = ~NOMBRE, label =~NOMBRE)
 
 gran_santiago <- gran_santiago %>% dplyr::filter(NOMBRE== "GRAN SANTIAGO") %>% dplyr::select(NOMBRE, geometry) %>% 

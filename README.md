@@ -3,10 +3,6 @@
 
 # MarineIndex
 
-``` r
-#usethis::edit_r_environ() para ver el token
-```
-
 The goal of MarineIndex is to develop a index of people connections with
 the sea.
 
@@ -68,9 +64,10 @@ The variable created are:
     city in Chile obtained from 2017 chilean census. We use
     *Population2017_forIndex.rds*
 
--   **DiversidadAves.R**: bird diversity for each Chilean city with data
-    obtain from iNaturalist using *Poligonos_Ciudades.rds*. We created
-    *Bird_type_prop.rds*.
+-   **DiversidadAves.R** and **DiversidadPlantas.R** : bird and plant
+    diversity for each Chilean city with data obtain from iNaturalist
+    using *Poligonos_Ciudades.rds*. We created *Bird_type_prop.rds* and
+    *RiquezaPlantas_Ciudad.rds*.
 
 -   *variables ciudades a mano.csv* was created using google street view
     and saving in an excel datasheet and correspond to the walkable

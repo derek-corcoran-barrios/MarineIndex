@@ -7,8 +7,6 @@ library(sf)
 library(rinat)
 library(terra)
 
-
-
 ####################################################################
 ### Arreglo de aves por grupos
 
@@ -23,6 +21,7 @@ Especies <- unique(Aves$scientific_name) %>% sort()
 Fixed <- taxize::gnr_resolve(sci = Especies, data_source_ids = 11, canonical = T, best_match_only = T, fields = "all")
 
 ## Solo retenemos especies de aves y con un score mayor a 0.9
+## arreglos de taxonomia desde gbif
 Fixed_Corrected <- Fixed %>% dplyr::filter(str_detect(classification_path, "Aves"), score >= 0.9) %>% 
   dplyr::select(user_supplied_name, matched_name2) %>% 
   dplyr::rename(scientific_name = user_supplied_name)
