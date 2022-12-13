@@ -64,12 +64,11 @@ ggplot(Validacion_Indice) + geom_point(aes(x=Dist_Costa, y=Index)) +  scale_colo
 First we created polygons of cities that we have for marine index. Data was obtain from: 
 
 - https://www.bcn.cl/ for most urban areas of Chile 
-- http://datos.cedeus.cl/ for towns
-- http://datos.cedeus.cl/ for gran santiago
+- http://datos.cedeus.cl/ for metropolitan areas
 File is **PoligonosCiudades.R** and data created is in *"Poligonos_Ciudades.rds"*.
 
 
-The variable created are:
+Variables created are:
 
 - Relation with first settlements was developed in **Prob_grupo_xCiudad.R**. ver README.md in *ModelacionAsentamientosGit* file.
 The data for each city was obtained from *Prob_puntoCiudades_grupos.rds*. We used the centroid of each city polygon (*Poligonos_Ciudades.rds*) to get city's coordinates and obtained the prediction for all ancient groups. Information of calibrated points used ofr models are in *MarineIndex/Supplementary material 1* and file were the distribution model was developed is in **ModelosHUmanosMyT.R**
@@ -88,7 +87,7 @@ The data for each city was obtained from *Prob_puntoCiudades_grupos.rds*. We use
 
 - fisher coves: data from Servicio Nacional de Pesca, with the number of fisher coves registered in Chile. A .kmz was downloaded and transformed in **Datos pescadores chile.R**. *caletas.shp* has the information for fisher coves and coordinates for every region of the country.
 
-
+- CO and Rivers: data obtained from Google Earth Engine catalog (https://developers.google.com/earth-engine/datasets/catalog), repository available here: https://github.com/derek-corcoran-barrios/NewVariablesCoastalIndex
 
 
 Variable were tested GBM in **Relaciones indice marino.R**. Results were saved as *ResultadoGBM2.rds* and *Variables.rds*

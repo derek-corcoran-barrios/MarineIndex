@@ -39,12 +39,11 @@ First we created polygons of cities that we have for marine index. Data
 was obtain from:
 
 -   <https://www.bcn.cl/> for most urban areas of Chile
--   <http://datos.cedeus.cl/> for towns
--   <http://datos.cedeus.cl/> for gran santiago File is
+-   <http://datos.cedeus.cl/> for metropolitan areas File is
     **PoligonosCiudades.R** and data created is in
     *“Poligonos_Ciudades.rds”*.
 
-The variable created are:
+Variables created are:
 
 -   Relation with first settlements was developed in
     **Prob_grupo_xCiudad.R**. ver README.md in
@@ -96,6 +95,11 @@ The variable created are:
     transformed in **Datos pescadores chile.R**. *caletas.shp* has the
     information for fisher coves and coordinates for every region of the
     country.
+
+-   CO and Rivers: data obtained from Google Earth Engine catalog
+    (<https://developers.google.com/earth-engine/datasets/catalog>),
+    repository available here:
+    <https://github.com/derek-corcoran-barrios/NewVariablesCoastalIndex>
 
 Variable were tested GBM in **Relaciones indice marino.R**. Results were
 saved as *ResultadoGBM2.rds* and *Variables.rds*

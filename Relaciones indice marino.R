@@ -1,4 +1,5 @@
 # Relaciones del indice marino- conexion con el mar
+# Variables de nature's Contributions to people
 
 library(tidyverse)
 
@@ -8,14 +9,11 @@ Indice <- readRDS("/home/giorgia/Documents/Doctorado tesis/Mod.distrib/Modelacio
 Indice$Ciudad[82] <- "Gran Santiago"
 
 
-###DISTANCIA COSTA CIUDADES CHILE##################################################################
-
+### DISTANCIA COSTA CIUDADES CHILE 
 Valores_DistCosta <- readRDS("DistCosta_Chile.rds")
 
 
-
 #agregar conurbaciones
-
 Validacion_Indice <- left_join(Indice, Valores_DistCosta)
 
 Validacion_Indice <- Validacion_Indice %>% dplyr::filter(!is.na(Dist_Costa)) %>% rename(City=Ciudad) %>% distinct() %>% 
@@ -27,15 +25,45 @@ rm(Valores_DistCosta)
 gc()
 
 
-###RELACION CON PRIMERO POBLADORES######################################################################
+
+######## MATERIAL NCP ##############
+
+# Número de pescadores por ciudad
+
+pescadores <- readRDS("Pescadores_ciudad_ENE.rds") %>% ungroup() %>% dplyr::select(Ciudad,n) %>% rename(City=Ciudad) %>% 
+  rename(pescadores=n) %>% replace_na()
+pescadores$City <- janitor::make_clean_names(pescadores$City) %>% str_replace_all("_", " ") 
+
+Relacion <- left_join(Validacion_Indice, pescadores) %>% distinct()
+Relacion <- Relacion %>% left_join(pescadores) %>% 
+  mutate(pescadores = ifelse(is.na(pescadores), 0, pescadores))
+
+rm(pescadores)
+
+
+# Número de caletas por ciudad
+
+Caletas <- readRDS("Valor_caletas.rds") %>% rename(City=Ciudad) %>% replace_na() %>%  as.data.frame()%>%
+  dplyr::select(-geometry) %>% rename(FCV=Indice_Km)
+Caletas$City <- janitor::make_clean_names(Caletas$City) %>% str_replace_all("_", " ") 
+
+Relacion <- Relacion %>% left_join(Caletas) %>% mutate(FCV = ifelse(is.na(FCV), 0, FCV))
+
+rm(Caletas)
+gc()
+
+
+
+######## NON-MATERIAL NCP ##############
+
+# Relacion con primero pobladores: pescador arcaico y recolector marítimo
 
 Prob_punto <- read_rds("/home/giorgia/Documents/Doctorado tesis/Mod.distrib/ModelacionAsentamientosGit/Prob_puntoCiudades_grupos.rds") %>% 
   rename(City =Ciudad) %>% 
   mutate(P_PescadorArcaico = ifelse(is.na(P_PescadorArcaico), 0, P_PescadorArcaico),
          P_RecolectorMaritimo = ifelse(is.na(P_RecolectorMaritimo), 0, P_RecolectorMaritimo))
 
-Relacion <- left_join(Validacion_Indice, Prob_punto) %>% distinct()
-Relacion <- Relacion %>% dplyr::select(-P_PrimerosHabitantes)
+Relacion <- Relacion %>%  left_join(Prob_punto) %>% distinct() %>% dplyr::select(-P_PrimerosHabitantes)
 
 rm(Prob_punto, Validacion_Indice)
 gc()
@@ -44,73 +72,62 @@ gc()
 Relacion <- Relacion %>% dplyr::filter(City != "tongoy" & City != "hualpen")
 
 
-###PROPORCION CON DISTANCIA A LA COSTA##################################################################### 
+# Proporcion de distancia a la costa
 
 Prop_DistCosta <- read_rds("Prop_Polig.rds")
-
 Relacion$City <- janitor::make_clean_names(Relacion$City) %>% str_replace_all("_", " ")
-
 Prop_DistCosta$Ciudad <- janitor::make_clean_names(Prop_DistCosta$Ciudad) %>% str_replace_all("_", " ")
-
 Prop_DistCosta <- Prop_DistCosta %>% rename(City = Ciudad)
-
 
 Relacion <- left_join(Relacion, Prop_DistCosta)
 
 rm(Prop_DistCosta)
 gc()
 
-###POBLACION URBANA POR CIUDAD ##################################################################
+
+# Poblacion urbana
 
 Pop <- readRDS("Population2017_forIndex.rds") %>% rename(City=ciudad)
-
 Pop$City <- janitor::make_clean_names(Pop$City) %>% str_replace_all("_", " ")
 
 Relacion <- left_join(Relacion, Pop)
-
 rm(Pop)
 gc()
 
-###RELACION CON DIVERSIDAD DE AVES (MARINAS) ####################################################################
 
+# Diversidad de aves
 
 Birds <- readRDS("Bird_type_prop.rds")
 Birds$Ciudad <- janitor::make_clean_names(Birds$Ciudad) %>% str_replace_all("_", " ")
-
 Birds <- Birds %>% rename(City = Ciudad)
 
 Relacion <- left_join(Relacion, Birds) 
-
-
 Relacion <- Relacion %>%
    mutate_at(c("Riqueza_Total", "Riqueza_Aquatic", "Proportion_Aquatic", "shallow_water_bird_richness", 
                 "seabird_richness", "shorebird_richness", "shallow_water_bird_prop", 
                 "seabird_prop", "shorebird_prop"), ~case_when(!is.na(.) & !is.na(Proporcion_Costera_1800)~ .,
                                                               is.na(.) & !is.na(Proporcion_Costera_1800)~ 0
                 ))
-
 rm(Birds)
 gc()
 
 
-#### RELACOIN CON DIVERSIDAD DE PLANTAS ##########################
+# Diversidad de Plantas
 
-Plantas <- readRDS("RiquezaPlantas_Ciudad.rds") %>% rename(Riq_Plantas= Riqueza_Total)
+Plantas <- readRDS("RiquezaPlantas_Ciudad.rds") %>% rename(Riq_Plantas= Riqueza_Total) %>% rename(City=Ciudad)
 
-Relacion <- left_join(Relacion, Plantas)
+Relacion <- left_join(Relacion, Plantas) %>% mutate(Riq_Plantas = ifelse(is.na(Riq_Plantas), 0, Riq_Plantas))
 rm(Plantas)
-
 gc()
 
-###RELACION CON COSTANERA CAMINABLE ##############################################################
+
+# Costanera caminable
 
 Walk <- read.csv("variables ciudades a mano.csv")
-
 Walk$City <- janitor::make_clean_names(Walk$City) %>% str_replace_all("_", " ")
 
 #Walk$KmWalk_WB <- readr::parse_number(Walk$KmWalk_WB)
 Walk$KmWalk_WB <- ifelse(is.na(Walk$KmWalk_WB), 0 , Walk$KmWalk_WB)
-
 Walk$KmWalk_Total<- Walk$KmWalk_sea + Walk$KmWalk_WB
 
 Relacion <- left_join(Relacion, Walk) 
@@ -118,46 +135,52 @@ Relacion <- left_join(Relacion, Walk)
 rm(Walk)
 gc()
 
-### blue visibility index
+# Indice de visibilidad marina
 
 Viewshed <- readRDS("viewshed_altitid.rds")
 Viewshed$Ciudad <- janitor::make_clean_names(Viewshed$Ciudad) %>% str_replace_all("_", " ")
-Viewshed <- Viewshed %>% dplyr::rename(City = Ciudad)
+Viewshed <- Viewshed %>% dplyr::rename(City = Ciudad) %>% dplyr::select(-n_viewshed)
 
-Relacion <- Relacion %>% left_join(Viewshed)
+Relacion <- Relacion %>% left_join(Viewshed) %>% rename(Viewshed_mean=Mean) %>% rename(Viewshed_median=Median) %>% 
+  rename(Viewshed_quant90 = Quant_90) %>% rename(Viewshed_quant80= Quant_80)
 rm(Viewshed)
 
-### Area por ciudad
+# Area de las ciudades
 
 Area <- readRDS("Poligonos_Ciudades.rds") %>% as.data.frame() %>% dplyr::select(Ciudad, st_area_sh) %>% 
   rename(City = Ciudad) 
 
 Relacion <- Relacion %>% left_join(Area)%>% rename(Area = st_area_sh)
 rm(Area)
-
-### número de pescadores por ciudad
-
-pescadores <- readRDS("Pescadores_ciudad_ENE.rds") %>% ungroup() %>% dplyr::select(Ciudad,n) %>% rename(City=Ciudad) %>% 
-  rename(pescadores=n) %>% replace_na()
-pescadores$City <- janitor::make_clean_names(pescadores$City) %>% str_replace_all("_", " ") 
-
-Relacion <- Relacion %>% left_join(pescadores) %>% 
-  mutate(pescadores = ifelse(is.na(pescadores), 0, pescadores))
-
-rm(pescadores)
-
-###### número de caletas por ciudad
-
-Caletas <- readRDS("Valor_caletas.rds") %>% rename(City=Ciudad) %>% replace_na()%>% dplyr::select(-geometry) %>%  as.data.frame()
-Caletas$City <- janitor::make_clean_names(Caletas$City) %>% str_replace_all("_", " ") 
-
-Relacion <- Relacion %>% left_join(Caletas) %>% mutate(Indice_Km = ifelse(is.na(Indice_Km), 0, Indice_Km))
-
-rm(Caletas)
 gc()
 
+
+######## REGULATIONING NCP ##############
+#data obtained from Google Earth Engine
+
+
+# Regulation for air quality
+CO <- read_rds("NewVariables.rds") %>% dplyr::select(ciudad, CO_median, CO_p90, CO_p10) %>% 
+  rename(City= ciudad)
+
+Relacion <- Relacion %>% left_join(CO)
+rm(CO)
+gc()
+  
+# Regulation of freshwater and coastal water quality
+
+Rivers <- read_rds("NewVariables.rds") %>% dplyr::select(ciudad, Rivers_median, Rivers_p90, Rivers_p10) %>% 
+  rename(City= ciudad)
+
+Relacion <- Relacion %>% left_join(Rivers)
+rm(Rivers)
+gc()
+
+# Regulation of climate
+
+
 ################## 
-## Test con GBM
+## Test con GBM con todas las variables
 Variables <- Relacion %>% dplyr::select(-Lon, -Lat)
 Variables <- Variables[complete.cases(Variables),]    ################# ????
 ForModel <- Variables %>% dplyr::select(-City)
@@ -194,10 +217,54 @@ plot(gbmFit2)
 saveRDS(gbmFit2, "ResultadoGBM2.rds")
 saveRDS(Variables, "Variables.rds")
 
-par(mfrow=c(2,2))
 
 
-###Resultados modelo y graficos
+################## 
+## GBM con variables seleccionadas a partir de ResultadoGBM2.rds
+
+VariablesSel <- Variables %>% dplyr::select(Index, Dist_Costa,KmWalk_Total, KmWalk_sea, Rivers_median, poblacion, 
+                                            P_PescadorArcaico, Proporcion_Costera_1800, CO_p10, Viewshed_mean, 
+                                            P_RecolectorMaritimo, Area, Riq_Plantas, seabird_prop, FCV, Proportion_Aquatic,
+                                            Riqueza_Total, pescadores, KmWalk_WB
+                                            )
+VariablesSel <- VariablesSel[complete.cases(Variables),]    ################# ????
+ForModel <- VariablesSel 
+
+library(caret)
+library(gbm)
+
+fitControl <- trainControl(## 10-fold CV
+  method = "repeatedcv",
+  number = 10,
+  ## repeated ten times
+  repeats = 10)
+
+gbmGrid <-  expand.grid(interaction.depth = c(1, 5, 9), 
+                        n.trees = (1:30)*50, 
+                        shrinkage = c(0.1,0.01),
+                        n.minobsinnode = 20)
+
+
+set.seed(825)
+
+
+gbmFit2 <- train(Index ~ ., data = ForModel, 
+                 method = "gbm", 
+                 trControl = fitControl, 
+                 verbose = TRUE, 
+                 ## Now specify the exact models 
+                 ## to evaluate:
+                 tuneGrid = gbmGrid)
+summary(gbmFit2)
+
+plot(gbmFit2)
+
+saveRDS(gbmFit2, "ResultadoGBM2VarSel.rds")
+saveRDS(VariablesSel, "VariablesSel.rds")
+
+
+
+####Resultados modelo y graficos
 
 gbmFit2 <-readRDS("ResultadoGBM2.rds")
 variables <- readRDS("Variables.rds")
@@ -209,11 +276,14 @@ library(patchwork)
 
 ### Relaciones entre Indice y Distancia a la costa
 
+#revisar variables
+#gbmFit2$finalModel$var.names
+
 Var1 <- plot(gbmFit2$finalModel, i.var = 1, return.grid = T)
 p1 <-ggplot(Var1, aes(x = Dist_Costa, y = y)) + geom_path() +xlab("Distance to the coast (m)") + ylab("Marine Index")+
   theme_bw() +ggtitle('A')
 
-Var2 <- plot(gbmFit2$finalModel, i.var = 19, return.grid = T)
+Var2 <- plot(gbmFit2$finalModel, i.var = 42, return.grid = T)
 p2 <-ggplot(Var2, aes(x = KmWalk_Total, y = y)) + geom_path()+xlab("Total walk-able water body coastline") + ylab("Marine Index")+
   theme_bw()+ggtitle('B')
 
@@ -221,8 +291,8 @@ Var3 <- plot(gbmFit2$finalModel, i.var = 17, return.grid = T)
 p3 <-ggplot(Var3, aes(x = KmWalk_sea, y = y)) + geom_path() +xlab("Walk-able marine coastline") + ylab("Marine Index")+
   theme_bw()+ggtitle('C')
 
-Var4 <- plot(gbmFit2$finalModel, i.var = 2, return.grid = T)
-p4 <-ggplot(Var4, aes(x = P_PescadorArcaico, y = y)) + geom_path() +xlab("Archaic fisherman communities' probability") + ylab("Marine Index")+
+Var4 <- plot(gbmFit2$finalModel, i.var = 4, return.grid = T)
+p4 <-ggplot(Var4, aes(x = Rivers_median, y = y)) + geom_path() +xlab("rivers") + ylab("Marine Index")+
   theme_bw()+ggtitle('D')
 
 Var5 <- plot(gbmFit2$finalModel, i.var = 7, return.grid = T)

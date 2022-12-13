@@ -1,6 +1,14 @@
 ## Este script se realizó para generar polígonos de las ciudades ya seleccionadas 
 ## que poseen un valor de Indice marino
 
+#revision de poligonos de ciudades (hecho el 11 dic 2022)
+#shiny::runGitHub("derek-corcoran-barrios/ExploradorComunas")
+
+#poligonos que no vale la pena arreglar por el tamaño
+#LEBU (2 poligonos en "Urban")
+#MACHALI (solo 1 poligono en "Urban)
+
+
 library(sf)
 library(tidyverse)
 library(terra)
@@ -32,57 +40,6 @@ Urban$Ciudad[116] <- "padre las casas"
 Urban$Ciudad[456] <- "santo domingo"
 
 ###### Correccion de polígonos
-##
-Conurbación_Chillán <- c("chillán", "chillán viejo") %>% janitor::make_clean_names()%>% str_replace_all("_", " ")
-Con_Chillan <- Urban %>%  dplyr::filter(Ciudad %in% Conurbación_Chillán) %>% 
-  sf::st_union()  %>% st_as_sf() %>% mutate(Ciudad = "conurbacion chillan")
-
-Con_Chillan <- st_sf(geometry=Con_Chillan) %>% rename(geometry=x)
-Urban <- Urban %>% bind_rows(Con_Chillan)
-
-##
-Conurbación_La_Serena_Coquimbo <- c("la serena", "coquimbo")%>% janitor::make_clean_names()%>% str_replace_all("_", " ")
-Con_sercoq <- Urban %>%  dplyr::filter(Ciudad %in% Conurbación_La_Serena_Coquimbo) %>% 
-  sf::st_union() %>% st_as_sf() %>% mutate(Ciudad = "conurbacion la serena coquimbo")
-Con_sercoq <- st_sf(geometry=Con_sercoq) %>% rename(geometry=x)
-
-Urban <- Urban %>% bind_rows(Con_sercoq)
-
-##
-Gran_Concepción <- c("concepcion", "coronel", "chiguayante", "hualpen", "hualqui", "lota", "penco", "san pedro de la paz", "talcahuano", "tome") %>% 
-  janitor::make_clean_names()%>% str_replace_all("_", " ")
-gran_conce <- Urban %>%  dplyr::filter(Ciudad %in% Gran_Concepción) %>% 
-  sf::st_union() %>% st_as_sf() %>% mutate(Ciudad = "gran concepcion")
-gran_conce <- st_sf(geometry=gran_conce) %>% rename(geometry=x)
-
-Urban <- Urban %>% bind_rows(gran_conce)
-
-##
-Gran_Temuco <- c("temuco", "padre las casas") %>% 
-  janitor::make_clean_names()%>% str_replace_all("_", " ")
-gran_temu <- Urban %>%  dplyr::filter(Ciudad %in% Gran_Temuco) %>% 
-  sf::st_union() %>% st_as_sf() %>% mutate(Ciudad = "gran temuco")
-gran_temu <- st_sf(geometry=gran_temu) %>% rename(geometry=x)
-
-Urban <- Urban %>% bind_rows(gran_temu)
-
-##
-Gran_Valparaíso<- c( "valparaiso", "vina del mar", "quilpue", "villa alemana", "concon")%>% 
-  janitor::make_clean_names()%>% str_replace_all("_", " ")
-gran_valpo <- Urban %>%  dplyr::filter(Ciudad %in% Gran_Valparaíso) %>% 
-  sf::st_union() %>% st_as_sf() %>% mutate(Ciudad = "gran valparaiso")
-gran_valpo <- st_sf(geometry=gran_valpo) %>% rename(geometry=x)
-
-Urban <- Urban %>% bind_rows(gran_valpo)
-
-
-rm(Con_Chillan)
-rm(Con_sercoq)
-rm(gran_conce)
-rm(gran_temu)
-rm(gran_valpo)
-
-
 
 ######## sumando dos localidades pequeñas de otro DF (http://datos.cedeus.cl/)
 #solo poseen los puntos y no son poligonos
@@ -100,26 +57,76 @@ rm(gran_valpo)
 
 
 
-#### Solo falta el gran santiago, por lo que se descarga como una capa aparte q incluye toda la ciudad (http://datos.cedeus.cl/)
+#### Para areas metropolitanas se trabajo con los poligonos de "area urbana consolidada" (http://datos.cedeus.cl/)
 
+Conurbaciones <- read_sf("area_urbana_consolidada_2017Polygon.shp") %>%
+  janitor::clean_names() %>% 
+  st_transform(crs="+proj=longlat +datum=WGS84") 
+
+
+#GRAN SANTIAGO
 #Primero saco los otros poligonos de santiago de urban q corresponde a la comuna
 Urban <- Urban %>% dplyr::filter(Ciudad!= "santiago", Ciudad!= "santiago 2")
-
-gran_santiago <- read_sf("area_urbana_consolidada_2017Polygon.shp") %>% 
-  st_transform(crs="+proj=longlat +datum=WGS84")
 
 #Identifico el poligono del gran santiago y luego filtro de DF
 #leaflet() %>% addTiles() %>% addPolygons(data = gran_santiago, popup = ~NOMBRE, label =~NOMBRE)
 
-gran_santiago <- gran_santiago %>% dplyr::filter(NOMBRE== "GRAN SANTIAGO") %>% dplyr::select(NOMBRE, geometry) %>% 
-  rename(Ciudad=NOMBRE) 
+gran_santiago <- Conurbaciones %>% dplyr::filter(nombre== "GRAN SANTIAGO") %>% dplyr::select(nombre, geometry) %>% 
+  rename(Ciudad=nombre) 
+gran_santiago$st_area_sh <- sf::st_area(gran_santiago) %>% as.numeric()
 gran_santiago[1]<- "gran santiago"
 
 Urban <- Urban %>% bind_rows(gran_santiago)
 rm(gran_santiago)
 
+#CONURBACION CHILLAN
+conurbacion_chillan <- Conurbaciones %>% dplyr::filter(nombre== "CHILLÁN-CHILLÁN VIEJO") %>% dplyr::select(nombre, geometry) %>% 
+  rename(Ciudad=nombre) 
+conurbacion_chillan$st_area_sh <- sf::st_area(conurbacion_chillan) %>% as.numeric()
+conurbacion_chillan[1]<- "conurbacion chillan"
+
+Urban <- Urban %>% bind_rows(conurbacion_chillan)
+rm(conurbacion_chillan)
+
+#CONURBACION COQUIMBO-LA SERENA
+conurbacion_coquimbo_laserena <- Conurbaciones %>% dplyr::filter(nombre== "COQUIMBO-LA SERENA") %>% dplyr::select(nombre, geometry) %>% 
+  rename(Ciudad=nombre) 
+conurbacion_coquimbo_laserena$st_area_sh <- sf::st_area(conurbacion_coquimbo_laserena) %>% as.numeric()
+conurbacion_coquimbo_laserena [1]<- "conurbacion la serena coquimbo"
+
+Urban <- Urban %>% bind_rows(conurbacion_coquimbo_laserena)
+rm(conurbacion_coquimbo_laserena)
+
+#GRAN CONCEPCIÓN
+Gran_Concepción <- Conurbaciones %>% dplyr::filter(nombre== "GRAN CONCEPCIÓN") %>% dplyr::select(nombre, geometry) %>% 
+  rename(Ciudad=nombre)
+Gran_Concepción$st_area_sh <- sf::st_area(Gran_Concepción) %>% as.numeric()
+Gran_Concepción[1]<- "gran concepcion"
+
+Urban <- Urban %>% bind_rows(Gran_Concepción)
+rm(Gran_Concepción)
 
 
+#TEMUCO-PADRE LAS CASAS
+Gran_Temuco <- Conurbaciones %>% dplyr::filter(nombre== "TEMUCO-PADRE LAS CASAS") %>% dplyr::select(nombre, geometry) %>% 
+  rename(Ciudad=nombre) 
+Gran_Temuco$st_area_sh <- sf::st_area(Gran_Temuco) %>% as.numeric()
+Gran_Temuco[1]<- "gran temuco"
+
+Urban <- Urban %>% bind_rows(Gran_Temuco)
+rm(Gran_Temuco)
+
+
+#GRAN VALPARAÍSO
+Gran_Valparaíso <- Conurbaciones %>% dplyr::filter(nombre== "GRAN VALPARAÍSO") %>% dplyr::select(nombre, geometry) %>% 
+  rename(Ciudad=nombre) 
+Gran_Valparaíso$st_area_sh <- sf::st_area(Gran_Valparaíso) %>% as.numeric()
+Gran_Valparaíso[1]<- "gran valparaiso"
+
+Urban <- Urban %>% bind_rows(Gran_Valparaíso)
+rm(Gran_Valparaíso)
+
+rm(Conurbaciones)
 
 ### Urban posee ciudades con multipoligonos, en donde el primer poligono tiene el nombre de la ciudad y luego se van enumerando
 # seleccion de poligonos, visualizando con Leaflet
@@ -142,6 +149,7 @@ Urban <- Urban %>% bind_rows(Iquique)
 Urban$Ciudad[643]<-"iquique"
 
 rm(Iquique)
+gc()
 
 #Para los demas poligonos no es necesario modificar ya que al unirse las ciudades se une con el primer poligono q son los correctos 
 # Calama <- Urban %>% dplyr::filter(str_detect(Ciudad, "calama"))
@@ -170,7 +178,7 @@ gc()
 
 Coords2 %>% saveRDS("Poligonos_Ciudades.rds")
 
-Area <- Coords2 %>% as.data.frame() %>% dplyr::select(-geometry)
+#Area <- Coords2 %>% as.data.frame() %>% dplyr::select(-geometry)
 
 
 
